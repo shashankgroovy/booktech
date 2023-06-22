@@ -1,0 +1,65 @@
+services:
+  db:
+    container_name: booktech_db
+    image: postgres
+    env_file: ./config/common.env
+    restart: "on-failure"
+    ports:
+      - "5432:5432"
+    networks:
+      - default
+    volumes:
+      - "./data:/app/data"
+
+  redis:
+    container_name: booktech_redis
+    hostname: localhost
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    expose:
+      - "6379"
+    networks:
+      - default
+    volumes:
+      - "./data:/app/data"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: booktech_app
+    env_file: ./config/common.env
+    deploy:
+      replicas: ${WORKER_REPLICA_COUNT:-2}
+    command: ['celery', '-A', 'booktech', 'worker', '--loglevel=INFO']
+    depends_on:
+      - db
+      - redis
+    networks:
+      - default
+    volumes:
+      - "./data:/app/data"
+      - ./:/app
+
+
+  beat:
+    image: booktech_app
+    env_file: ./config/common.env
+    command: ['celery', '-A', 'booktech', 'beat', '--loglevel=INFO']
+    depends_on:
+      - db
+      - redis
+    networks:
+      - default
+    volumes:
+      - "./data:/app/data"
+      - ./:/app
+    tty: true
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  data:
+    driver: local

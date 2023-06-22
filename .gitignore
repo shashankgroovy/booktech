@@ -1,0 +1,16 @@
+# Celery
+celerybeat-schedule
+
+# Python things
+**/__pycache__/
+*.pyc
+
+# vim swap files
+*.swp
+
+# env files
+.envrc
+
+# DB
+*.db
+*.rdb
