@@ -6,7 +6,12 @@ from booktech.utils import configurator as cfg
 
 
 def get_db_connection() -> tuple[extensions.connection, extensions.cursor]:
-    """Returns a databse conection and cursor"""
+    """Returns a databse conection and cursor
+
+    Returns:
+        psycopg2 connection
+        psycopg2 cursor 
+    """
 
     config = cfg.load_yaml_config()
     conn, cur = None, None

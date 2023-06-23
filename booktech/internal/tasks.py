@@ -1,8 +1,8 @@
 import datetime as dt
 
-from book.celery import app
-from book.db.init_db import get_db_connection
-from book.model import LiveData
+from booktech.db.connection import get_db_connection
+from booktech.internal.app import app
+from booktech.internal.model import LiveData
 
 
 @app.task

@@ -17,7 +17,7 @@ app.conf.update(
 
 app.conf.beat_schedule = {
     'load-livedata-every-10-seconds': {
-        'task': 'booktech.goods.tasks.load_all',
+        'task': 'booktech.internal.tasks.load_all',
         'schedule': 10.0
     },
 }

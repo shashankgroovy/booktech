@@ -11,7 +11,11 @@ class ConfigError(Exception):
 
 
 def load_yaml_config(cfg: t.Optional[str] = None):
-    """Loads configuration"""
+    """Loads configuration from a yaml file
+
+    Args:
+        cfg: Path to config file
+    """
 
     # If no cfg file is provided then proceed to load
     # from environment variable.
