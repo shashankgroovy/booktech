@@ -1,8 +1,8 @@
 import datetime as dt
 
+from booktech.celery import app
 from booktech.db import initialize
 from booktech.db.connection import get_db_connection
-from booktech.internal.app import app
 from booktech.internal.model import LiveData
 from booktech.utils.logger import log
 
@@ -41,29 +41,30 @@ def load_all(fetchsize: int=1000):
             price=item[2],
             currency=item[3],
             last_seen=item[4],
-        )
+        ).dict()
 
         try:
             # Only register those opportunity which have a price
-            if data.price > 0:
-                process(data)
+            if data["price"] > 0:
+                process.delay(data)
 
-            archive(data)
-            delete(data)
+            archive.delay(data)
+            delete.delay(data)
         except Exception as err:
-            log.error(f"Unable to process opportunity ID:{data.id} ,"
+            log.error(f"Unable to process opportunity ID:{data['id']} ,"
                       f"Error: {err}")
 
     log.info("[Load task]: Done")
 
 
 @app.task
-def process(live_data: LiveData):
+def process(data: dict):
     """Processes one live price opportunity
 
     Args:
-        live_data: The live price entry to be processed
+        data: dict, The live price entry to be processed
     """
+    live_data = LiveData(**data)
 
     log.info(f"[Process task]: Processing record with uuid:"
              f"{live_data.uuid.hex}")
@@ -109,12 +110,13 @@ def process(live_data: LiveData):
 
 
 @app.task
-def archive(live_data: LiveData):
+def archive(data: dict):
     """Archives one live price opportunity
 
     Args:
-        live_data: The live price entry to be archived.
+        data: dict, The live price entry to be archived.
     """
+    live_data = LiveData(**data)
 
     log.info(f"[Archive task]: Initiating archival process for ID={live_data.id}")
     # Get db connection
@@ -138,12 +140,13 @@ def archive(live_data: LiveData):
 
 
 @app.task
-def delete(live_data: LiveData):
+def delete(data: dict):
     """Deletes entry from live price table
 
     Args:
-        live_data: The live price entry to be deleted
+        data: dict, The live price entry to be deleted
     """
+    live_data = LiveData(**data)
 
     log.info(f"[Delete task]: Deleting record with ID={live_data.id}")
     # Get db connection
