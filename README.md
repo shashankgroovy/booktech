@@ -25,3 +25,28 @@ file. The `psql` command will automatically authenticate using that else it'll p
 ```
 psql -h 127.0.0.1 -p $DB_HOST_PORT -d $POSTGRES_DB -U $POSTGRES_USER
 ```
+
+
+# Initialize the database
+
+```
+celery -A booktech call booktech.internal.tasks.init_db
+```
+
+# Spin up the worker
+
+```
+celery -A booktech worker --loglevel=INFO
+```
+
+# Start the beat!
+
+```
+celery -A booktech beat --loglevel=INFO
+```
+
+# Watch it!
+
+```
+celery -A booktech flower --loglevel=INFO
+```

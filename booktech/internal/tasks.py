@@ -4,7 +4,18 @@ from booktech.celery import app
 from booktech.db import initialize
 from booktech.db.connection import get_db_connection
 from booktech.internal.model import LiveData
+from booktech.utils.cache import cache
 from booktech.utils.logger import log
+
+
+def validate_opportunity(live_price: float, max_price: float) -> bool:
+    """Core Logic:
+    Returns True if live_price is greater than max_price for now.
+
+    This function implements the core logic which may change or expand in
+    future to accomodate different use cases.
+    """
+    return live_price > max_price
 
 
 @app.task
@@ -18,7 +29,7 @@ def load_all(fetchsize: int=1000):
     """Load all available entries in live price table for processing
 
     Args:
-        fetchsize: Limits the number of results to fetch
+        fetchsize: Defines the number of results to fetch in one go.
     """
 
     log.info(f"[Load task]: Fetching {fetchsize} records for processing")
@@ -33,7 +44,7 @@ def load_all(fetchsize: int=1000):
     cur.close()
     conn.close()
 
-    # Register each row as a task
+    # Register each row as a celery task
     for item in res:
         data = LiveData(
             id=item[0],
@@ -48,8 +59,10 @@ def load_all(fetchsize: int=1000):
             if data["price"] > 0:
                 process.delay(data)
 
+            # Send the opportunity for archival and deletion
             archive.delay(data)
             delete.delay(data)
+
         except Exception as err:
             log.error(f"Unable to process opportunity ID:{data['id']} ,"
                       f"Error: {err}")
@@ -68,30 +81,55 @@ def process(data: dict):
 
     log.info(f"[Process task]: Processing record with uuid:"
              f"{live_data.uuid.hex}")
-    # Get db connection
+
+    # Cache check
+    max_price = float(cache.get(live_data.uuid.hex) or 0)
+
+    if not max_price:
+        # Get DB connection
+        _, cur = get_db_connection()
+
+        # Cache miss! Need to get the value from database
+        sql = """
+        SELECT max_price FROM max_price
+        WHERE uuid=%s
+        """
+        cur.execute(sql, (live_data.uuid.hex,))
+        res = cur.fetchone()
+
+        if not res:
+            # Couldn't find any results.
+            return
+
+        max_price =  float(res[0])
+
+        # Populate cache
+        cache.set(live_data.uuid.hex, max_price)
+
+    ok:bool = validate_opportunity(live_data.price, max_price)
+    if not ok:
+        return
+
+    # It's a valid opportunity, let's save it!
+    save(live_data, max_price)
+    log.info("[Process task]: Finished - created one opportunity")
+
+
+def save(live_data: LiveData, max_price: float):
+    """Persists a new opportunity to database
+
+    Args:
+        live_data: Live data of the selected opportunity
+        max_price: Max price available
+    """
+
+    log.info(f"[Process task]: Found one opportunity - "
+             f"max: {max_price}, live: {live_data.price}")
+
+    # Get DB connection
     conn, cur = get_db_connection()
 
-    # NOTE:
-    # Write the logic to check cache since we already have redis
-    sql = """
-    SELECT max_price FROM max_price
-    WHERE uuid=%s
-    """
-    cur.execute(sql, (live_data.uuid.hex,))
-    res = cur.fetchone()
-
-    if not res:
-        # Couldn't find any results.
-        return
-
-    max_price =  float(res[0])
-    if live_data.price > max_price:
-        return
-
     # Found a possible opportunity
-    log.info(f"[Process task]: Found one opportunity - "
-             f"max: {float(res[0])}, live: {live_data.price}")
-
     sql = """
     INSERT INTO app_output (uuid, max_price, live_price, created_at)
     VALUES (%s, %s, %s, %s);
@@ -106,7 +144,6 @@ def process(data: dict):
     conn.commit()
     cur.close()
     conn.close()
-    log.info("[Process task]: Finished - created one opportunity")
 
 
 @app.task
