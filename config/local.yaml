@@ -1,24 +1,23 @@
+cache:
+  host: 'redis' # Note this host should match the name of service in docker-compose.yml
+  port: 6379
+  db: 2
+  url: 'redis://redis:6379/0'
+
+celery:
+  broker_url: 'redis://redis:6379/1'
+  backend_url: 'redis://redis:6379/2'
+  task_concurrency: 4
+  worker_heartbeat: 120
+  worker_prefetch_multiplier: 10
+
 database:
   name: postgres
   user: postgres
   password: postgres
   pg_data: /var/lib/postgresql/data
-  host: 127.0.0.1
+  host: db # this host should match the name of service in docker-compose.yml
   port: 5432
   remote_port: 5432
   mount_volume: /data
-  uri: postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/postgres
-
-celery:
-  broker_url: 'redis://redis:6379/0'
-  backend_url: 'redis://redis:6379/1'
-  task_concurrency: 4
-  worker_heartbeat: 120
-  worker_prefetch_multiplier: 10
-
-cache:
-  url: 'redis://redis:6379/2'
-  host: 'localhost'
-  port: 6379
-  db: 2
-
+  uri: postgresql+psycopg2://postgres:postgres@db:5432/postgres

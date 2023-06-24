@@ -5,7 +5,7 @@ services:
     env_file: ./config/common.env
     restart: "on-failure"
     ports:
-      - "5432:5432"
+      - "${DB_HOST_PORT:-5432}:5432"
     networks:
       - default
     volumes:
@@ -25,6 +25,7 @@ services:
       - "./data:/app/data"
 
   initializer:
+    container_name: initializer
     build:
       context: .
       dockerfile: Dockerfile
@@ -57,12 +58,14 @@ services:
       - ./:/app
 
   beat:
+    container_name: beat
     image: booktech_app
     env_file: ./config/common.env
     command: ['celery', '-A', 'booktech', 'beat', '--loglevel=INFO']
     depends_on:
       - db
       - redis
+      - worker
     networks:
       - default
     volumes:
@@ -70,12 +73,16 @@ services:
       - ./:/app
 
   flower:
+    container_name: flower
     image: booktech_app
     env_file: ./config/common.env
     command: ['celery', '-A', 'booktech', 'flower', '--loglevel=INFO']
+    ports:
+      - "5555:5555"
     depends_on:
       - db
       - redis
+      - worker
     networks:
       - default
     volumes:

@@ -1,24 +1,24 @@
-database:
-  name: postgres
-  user: shanks
-  password: shanks
-  pg_data: /var/lib/postgresql/data
-  host: 127.0.0.1
-  port: 5432
-  remote_port: 5432
-  mount_volume: /data
-  uri: postgresql+psycopg2://shanks:shanks@127.0.0.1:5432/postgres
+cache:
+  host: 'localhost' # Note this host should match the name of service in docker-compose.yml
+  port: 6379
+  db: 2
+  url: 'redis://localhost:6379/0'
 
 celery:
-  broker_url: 'redis://localhost:6379/0'
-  backend_url: 'redis://localhost:6379/1'
+  broker_url: 'redis://localhost:6379/1'
+  backend_url: 'redis://localhost:6379/2'
   task_concurrency: 4
   worker_heartbeat: 120
   worker_prefetch_multiplier: 10
 
-cache:
-  url: 'redis://localhost:6379/2'
-  host: 'localhost'
-  port: 6379
-  db: 2
+database:
+  name: postgres
+  user: postgres
+  password: postgres
+  pg_data: /var/lib/postgresql/data
+  host: 127.0.0.1  # this host should match the name of service in docker-compose.yml
+  port: 5432
+  remote_port: 5432
+  mount_volume: /data
+  uri: postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/postgres
 
