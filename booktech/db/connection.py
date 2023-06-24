@@ -3,6 +3,7 @@ from psycopg2 import extensions
 from sqlalchemy import create_engine
 
 from booktech.utils import configurator as cfg
+from booktech.utils.logger import log
 
 
 def get_db_connection() -> tuple[extensions.connection, extensions.cursor]:
@@ -10,7 +11,7 @@ def get_db_connection() -> tuple[extensions.connection, extensions.cursor]:
 
     Returns:
         psycopg2 connection
-        psycopg2 cursor 
+        psycopg2 cursor
     """
 
     config = cfg.load_yaml_config()
@@ -25,7 +26,7 @@ def get_db_connection() -> tuple[extensions.connection, extensions.cursor]:
         )
         cur = conn.cursor()
     except (Exception, psycopg2.DatabaseError) as err:
-        print(f"Whoops! Error establishing connection - {err}")
+        log.error(f"Whoops! Error establishing connection - {err}")
         raise err
 
     return (conn, cur)
