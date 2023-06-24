@@ -24,15 +24,13 @@ services:
     volumes:
       - "./data:/app/data"
 
-  worker:
+  initializer:
     build:
       context: .
       dockerfile: Dockerfile
     image: booktech_app
     env_file: ./config/common.env
-    deploy:
-      replicas: ${WORKER_REPLICA_COUNT:-2}
-    command: ['celery', '-A', 'booktech', 'worker', '--loglevel=INFO']
+    command: ['celery', '-A', 'booktech', 'call', 'booktech.internal.tasks.init_db']
     depends_on:
       - db
       - redis
@@ -42,6 +40,21 @@ services:
       - "./data:/app/data"
       - ./:/app
 
+  worker:
+    image: booktech_app
+    env_file: ./config/common.env
+    deploy:
+      replicas: ${WORKER_REPLICA_COUNT:-2}
+    command: ['celery', '-A', 'booktech', 'worker', '--loglevel=INFO']
+    depends_on:
+      - db
+      - redis
+      - initializer
+    networks:
+      - default
+    volumes:
+      - "./data:/app/data"
+      - ./:/app
 
   beat:
     image: booktech_app
@@ -55,7 +68,21 @@ services:
     volumes:
       - "./data:/app/data"
       - ./:/app
-    tty: true
+
+  flower:
+    image: booktech_app
+    env_file: ./config/common.env
+    command: ['celery', '-A', 'booktech', 'flower', '--loglevel=INFO']
+    depends_on:
+      - db
+      - redis
+    networks:
+      - default
+    volumes:
+      - "./data:/app/data"
+      - ./:/app
+
+
 networks:
   default:
     driver: bridge
