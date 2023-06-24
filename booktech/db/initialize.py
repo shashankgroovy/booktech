@@ -1,9 +1,11 @@
 import datetime as dt
-import pandas as pd
-from psycopg2 import DatabaseError
+import os
 
-from booktech.utils.logger import log
+import pandas as pd
+from psycopg2.errors import DatabaseError, UniqueViolation
+
 from booktech.db import connection, sql
+from booktech.utils.logger import log
 
 
 def create_tables():
@@ -17,11 +19,12 @@ def create_tables():
         cur.execute(sql.EXTENSION_UUID_DDL)
 
         # Create the tables
-        cur.execute(sql.TABLE_MAX_PRICE_NAME)
-        cur.execute(sql.TABLE_APP_OUTPUT_NAME)
-        cur.execute(sql.TABLE_LIVE_PRICE_NAME)
-        cur.execute(sql.TABLE_LIVE_PRICE_ARCHIVE_NAME)
+        cur.execute(sql.TABLE_MAX_PRICE_DDL)
+        cur.execute(sql.TABLE_APP_OUTPUT_DDL)
+        cur.execute(sql.TABLE_LIVE_PRICE_DDL)
+        cur.execute(sql.TABLE_LIVE_PRICE_ARCHIVE_DDL)
 
+        # Commit the transaction and close the connection
         conn.commit()
         cur.close()
         conn.close()
@@ -42,7 +45,7 @@ def load_live_data(file: str):
     # Fill the missing values with corresponding defaults
     df_live["price"] = df_live.price.fillna(0.0)
     df_live["currency"] = df_live.currency.fillna("")
-    df_live["last_seen"] = df_live.price.fillna(dt.datetime.now().strftime("%Y-%m-%d, %H:%M:%S"))
+    df_live["last_seen"] = df_live.last_seen.fillna(dt.datetime.now().strftime("%Y-%m-%d, %H:%M:%S"))
 
     # Let's store the index as ID in DB
     # This will help us for faster purge operations.
@@ -63,13 +66,28 @@ def load_from_csv(file: str, table: str, sep: str = ","):
         sep: File separator used in the file
     """
     log.info(f"Loading data in {table} table")
+
     try:
         conn, cur = connection.get_db_connection()
-        cur.copy_from(file, table, sep)
 
-        cur.close()
-        conn.close()
+        if not os.path.isfile(file):
+            log.warn(f"Unable to load file {file} from given location.")
+            return
 
+        with open(file) as f:
+            # Skip the header row
+            next(f)
+
+            # Copy rest of the file data
+            cur.copy_from(f, table, sep)
+
+            # Commit the transaction and close the connection
+            conn.commit()
+            cur.close()
+            conn.close()
+
+    except UniqueViolation as err:
+        log.warn(f"Skipping - {table} is already populated.")
     except DatabaseError as err:
         log.error(f"Whoops something went wrong - {err}")
 
