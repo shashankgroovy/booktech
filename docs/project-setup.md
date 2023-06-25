@@ -46,7 +46,7 @@ There are multiple ways to run the application which are listed below.
    Simply run:
 
    ```bash
-   docker-compose --env-file ./config/local.env up
+   docker-compose --env-file ./config/common.env up
    ```
 
    This spins up several things and ties everything together:

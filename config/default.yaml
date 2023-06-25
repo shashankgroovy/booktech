@@ -20,5 +20,5 @@ database:
   port: 5432
   remote_port: 5432
   mount_volume: /data
-  uri: postgresql+psycopg2://postgres:postgres@127.0.0.1:5433/postgres
+  uri: postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/postgres
 
