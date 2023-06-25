@@ -7,10 +7,17 @@ It also showcases the use of celery for scheduling task and offloading heavy wor
 
 - [Installation and running the application](./docs/project-setup.md)
 - [Directory Structure](./docs/directory-structure.md)
-- [Architecture](./docs/architecture.md)
 - [Errors](./docs/errors.md)
 - [Problem Statement](./docs/problem.md)
+- [Generated app output](./docs/app_output.md)
 
+## Benchmarks
+Based on a complete run, 50000 live price records were processed in under 8 mins and 16 seconds.
+Therefore the application has a high throughput of processing 100 requests/second.
+
+Monitoring support has been added to track the number of tasks being processed
+and monitor the celery workload with the help of celery flower. Go to
+[http://localhost:5555/](http://localhost:5555/)
 
 ## Quickstart
 

@@ -1,4 +1,5 @@
 import datetime as dt
+import typing as t
 
 import pandas as pd
 
@@ -39,8 +40,8 @@ def load_all(fetchsize: int=1000):
     conn, cur = get_db_connection()
 
     # Fetch all live prices
-    sql = "SELECT * FROM live_price"
-    cur.execute(sql)
+    load_sql = "SELECT * FROM live_price"
+    cur.execute(load_sql)
     res = cur.fetchmany(fetchsize)
 
     cur.close()
@@ -92,11 +93,11 @@ def process(data: dict):
         _, cur = get_db_connection()
 
         # Cache miss! Need to get the value from database
-        sql = """
+        max_sql = """
         SELECT max_price FROM max_price
         WHERE uuid=%s
         """
-        cur.execute(sql, (live_data.uuid.hex,))
+        cur.execute(max_sql, (live_data.uuid.hex,))
         res = cur.fetchone()
 
         if not res:
@@ -132,11 +133,11 @@ def save(live_data: LiveData, max_price: float):
     conn, cur = get_db_connection()
 
     # Found a possible opportunity
-    sql = """
+    save_sql = """
     INSERT INTO app_output (uuid, max_price, live_price, created_at)
     VALUES (%s, %s, %s, %s);
     """
-    cur.execute(sql, (
+    cur.execute(save_sql, (
         live_data.uuid.hex,
         max_price,
         live_data.price,
@@ -161,11 +162,11 @@ def archive(data: dict):
     # Get db connection
     conn, cur = get_db_connection()
 
-    sql = """
+    archive_sql = """
     INSERT INTO live_price_archive (uuid, price, currency, last_seen)
     VALUES (%s, %s, %s, %s);
     """
-    cur.execute(sql, (
+    cur.execute(archive_sql, (
         live_data.uuid.hex,
         live_data.price,
         live_data.currency,
@@ -191,10 +192,10 @@ def delete(data: dict):
     # Get db connection
     conn, cur = get_db_connection()
 
-    sql = """
+    delete_sql = """
     DELETE FROM live_price WHERE id = %s;
     """
-    cur.execute(sql, (
+    cur.execute(delete_sql, (
         live_data.id,
     ))
 
@@ -205,11 +206,17 @@ def delete(data: dict):
 
 
 @app.task
-def app_output_dump():
+def app_output_dump(filepath: t.Optional[str]=None):
     """Takes a dump of the app_output table and writes that to csv file"""
 
-    log.info(f"[DB dump task]: Initializing dump.")
+    log.info(f"[Output dump task]: Initializing dump for generated app_output data")
 
     # Get db engine
     engine = get_db_engine()
     df = pd.read_sql(sql.TABLE_APP_OUTPUT_NAME, engine)
+
+    if not filepath:
+        filepath = "data/app_output.csv"
+
+    df.to_csv(filepath, index=False)
+    log.info(f"[Output dump task]: Finished creating {filepath} file with generated app output data")

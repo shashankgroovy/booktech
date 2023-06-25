@@ -62,8 +62,8 @@ There are multiple ways to run the application which are listed below.
 3. ### Pythonic way
 
    Sometimes it takes time to spin up the containers. So you can use the more
-   pythonic ways to get the API running. The following things have to be made
-   available first:
+   pythonic ways to get the application running. The following things have to
+   be made available first:
 
    - [Redis](./project-setup.md#running-redis)
    - [PostgreSQL](./project-setup.md#running-postgres)
@@ -96,9 +96,10 @@ There are multiple ways to run the application which are listed below.
    ```
 
    #### Watch it bloom!
-   It's always nice to see monitoring page. Flower makes a neat dashboard
+   It's always nice to see monitoring. Flower makes a neat dashboard
    available at [http://localhost:5555](http://localhost:5555) by default.
-   Head over to the webpage, to see available workers and all the tasks in different states.
+   Head over to the webpage, to see available workers and all the tasks in
+   different states.
 
    ```
    celery -A booktech flower --loglevel=INFO
