@@ -43,6 +43,4 @@ postgres=# select * from app_output limit 20;
 We can find a full csv file which completely processed data in the `data/`
 directory with the name `app_output.csv`
 
-[Link to file](./data/app_output.csv)
-
 And that's about it!

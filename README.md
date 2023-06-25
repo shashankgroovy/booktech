@@ -10,14 +10,7 @@ It also showcases the use of celery for scheduling task and offloading heavy wor
 - [Errors](./docs/errors.md)
 - [Problem Statement](./docs/problem.md)
 - [Generated app output](./docs/app_output.md)
-
-## Benchmarks
-Based on a complete run, 50000 live price records were processed in under 8 mins and 16 seconds.
-Therefore the application has a high throughput of processing 100 requests/second.
-
-Monitoring support has been added to track the number of tasks being processed
-and monitor the celery workload with the help of celery flower. Go to
-[http://localhost:5555/](http://localhost:5555/)
+- [Monitoring](./docs/monitoring.md)
 
 ## Quickstart
 
@@ -29,6 +22,20 @@ bash bin/launch.sh
 ```
 
 For more, read the [project setup guide](./docs/project-setup.md).
+
+## Benchmarks
+Based on a complete run, 50000 live price records were processed in under 8 mins and 16 seconds.
+Therefore the application has a high throughput of processing 100 requests/second.
+
+Monitoring support has been added to track the number of tasks being processed
+and monitor the celery workload with the help of celery flower. Go to
+[http://localhost:5555/](http://localhost:5555/)
+
+Addtionally, we can use the same data from flower to power our Prometheus+Grafana dashboard
+For more head over to [monitoring doc](./docs/monitoring.md) on how to set it up.
+
+Here's a quick screenshot of the dashboard.
+![Grafana Dashboard](./docs/Grafana-Celery-Monitoring-Dashboard.png)
 
 ## Style Guide
 
