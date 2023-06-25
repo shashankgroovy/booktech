@@ -1,5 +1,19 @@
 # Errors
 
+Booktech is quite robust but you may encounter some or none of these errors or
+unexpected behaviours. And when you do, then you can always refer here.
+
+## Docker compose stopped
+
+There can be a plethora of reasons, but if the compose setup automatically
+receied a `Warm shut down requested` or a worker `excited with code 137`,
+then compose must have ran out of memory.
+
+> Docker exit code 137 implies Docker doesn't have enough RAM to finish the work.
+
+
+## Common error
+
 A common error one might see in the logs is when you spin up the application.
 Here's an excerpt from it
 

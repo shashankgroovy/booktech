@@ -1,8 +1,10 @@
 import datetime as dt
 
+import pandas as pd
+
 from booktech.celery import app
-from booktech.db import initialize
-from booktech.db.connection import get_db_connection
+from booktech.db import initialize, sql
+from booktech.db.connection import get_db_connection, get_db_engine
 from booktech.internal.model import LiveData
 from booktech.utils.cache import cache
 from booktech.utils.logger import log
@@ -200,3 +202,14 @@ def delete(data: dict):
     cur.close()
     conn.close()
     log.info("[Delete task]: Done")
+
+
+@app.task
+def app_output_dump():
+    """Takes a dump of the app_output table and writes that to csv file"""
+
+    log.info(f"[DB dump task]: Initializing dump.")
+
+    # Get db engine
+    engine = get_db_engine()
+    df = pd.read_sql(sql.TABLE_APP_OUTPUT_NAME, engine)
