@@ -43,6 +43,10 @@ Here's a quick screenshot of the dashboard.
 Follow the [Python style guide - PEP 8](https://www.python.org/dev/peps/pep-0008/)
 and use [Black](https://pypi.org/project/black/) as the code formatter.
 
+## License
+
+It is [licensed](./LICENSE) under the [MIT License](https://mit-license.org/).
+
 ## Contributing
 
 Just hack away and happy programming!
